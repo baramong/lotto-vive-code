@@ -1,0 +1,2208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="description" content="동행복권 6/45 공식 색상 기반의 프리미엄 로또 번호 생성기. 3D 구슬 추첨기, 고정수/제외수 필터, 실물 복권 영수증 인쇄, 통계 분석까지 완벽 지원!">
+  <meta name="theme-color" content="#0f172a">
+  <title>로또 6/45 프리미엄 추첨 스튜디오 | 럭키 로또</title>
+  
+  <style>
+    /* ==========================================================================
+       CSS Variables & Theme System
+       ========================================================================== */
+    :root {
+      --bg-gradient: radial-gradient(circle at 10% 10%, #e0f2fe 0%, #f0fdf4 30%, #f8fafc 80%);
+      --bg-color: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-glass: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(226, 232, 240, 0.85);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-subtle: #94a3b8;
+      
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --primary-light: #ecfdf5;
+      --primary-glow: rgba(16, 185, 129, 0.28);
+      
+      --accent-gold: #f59e0b;
+      --accent-blue: #3b82f6;
+      --accent-red: #ef4444;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.07), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.12);
+      --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.35);
+
+      --ball-y: radial-gradient(circle at 35% 30%, #fff799 0%, #fbc400 48%, #c58d00 100%);
+      --ball-b: radial-gradient(circle at 35% 30%, #99d8ff 0%, #2b88e6 48%, #0f5197 100%);
+      --ball-r: radial-gradient(circle at 35% 30%, #ffa3a3 0%, #ff4b4b 48%, #b81b1b 100%);
+      --ball-g: radial-gradient(circle at 35% 30%, #e2e8f0 0%, #8a9aa7 48%, #505f6c 100%);
+      --ball-gr: radial-gradient(circle at 35% 30%, #abf7be 0%, #20bf6b 48%, #0b7e40 100%);
+      
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --radius-xl: 32px;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-gradient: radial-gradient(circle at 20% 15%, #132238 0%, #0d191d 40%, #090d16 90%);
+      --bg-color: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.88);
+      --card-glass: rgba(22, 30, 49, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      
+      --primary: #10b981;
+      --primary-hover: #34d399;
+      --primary-light: rgba(16, 185, 129, 0.12);
+      --primary-glow: rgba(16, 185, 129, 0.4);
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-gradient), var(--bg-color);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+      overflow-x: hidden;
+      line-height: 1.5;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Ambient glowing background aura */
+    .ambient-glow {
+      position: fixed;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      filter: blur(100px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+      animation: floatAura 18s ease-in-out infinite alternate;
+    }
+    .glow-1 { top: -100px; left: -100px; background: #10b981; }
+    .glow-2 { bottom: -100px; right: -100px; background: #3b82f6; animation-delay: -7s; }
+    .glow-3 { top: 40%; right: 10%; background: #f59e0b; opacity: 0.18; animation-delay: -12s; }
+
+    @keyframes floatAura {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(60px, 40px) scale(1.15); }
+    }
+
+    /* ==========================================================================
+       Layout & Header
+       ========================================================================== */
+    .app-container {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 20px 60px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      display: grid;
+      place-items: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .brand-title span:first-child {
+      background: linear-gradient(90deg, #10b981, #06b6d4, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .brand-subtitle {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .header-ctrls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: var(--shadow-sm);
+    }
+    .icon-btn:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       Navigation Tabs
+       ========================================================================== */
+    .mode-nav {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      background: var(--card-glass);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .mode-nav::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.4);
+    }
+    :root[data-theme="dark"] .tab-btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #ffffff !important;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    /* ==========================================================================
+       Main Glass Panel
+       ========================================================================== */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .hero-header {
+      text-align: center;
+      margin-bottom: 26px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .hero-title {
+      font-size: clamp(1.6rem, 4vw, 2.3rem);
+      font-weight: 850;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+    .hero-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ==========================================================================
+       Official 3D Lotto Balls
+       ========================================================================== */
+    .balls-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lotto-ball {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      position: relative;
+      box-shadow: 
+        0 6px 14px rgba(0, 0, 0, 0.22),
+        inset -2px -4px 6px rgba(0, 0, 0, 0.35),
+        inset 2px 3px 5px rgba(255, 255, 255, 0.7);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      user-select: none;
+      animation: popBall 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+    }
+    .lotto-ball:hover {
+      transform: translateY(-4px) scale(1.08);
+    }
+
+    /* Korea Lotto Official Ball Ranges */
+    .lotto-ball[data-range="yellow"] { background: var(--ball-y); color: #372300; text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6); }
+    .lotto-ball[data-range="blue"]   { background: var(--ball-b); }
+    .lotto-ball[data-range="red"]    { background: var(--ball-r); }
+    .lotto-ball[data-range="gray"]   { background: var(--ball-g); }
+    .lotto-ball[data-range="green"]  { background: var(--ball-gr); }
+
+    .lotto-ball.bonus-ball {
+      position: relative;
+    }
+    .bonus-tag {
+      position: absolute;
+      top: -9px;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 6px;
+      text-shadow: none;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    }
+
+    .plus-sign {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--text-subtle);
+      margin: 0 2px;
+    }
+
+    @keyframes popBall {
+      0% {
+        opacity: 0;
+        transform: scale(0.3) translateY(20px);
+      }
+      70% {
+        transform: scale(1.15) translateY(-4px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    /* ==========================================================================
+       Mode 1: 5 Games List & Tickets
+       ========================================================================== */
+    .tickets-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .ticket-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--card-glass);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      transition: all 0.2s ease;
+    }
+    .ticket-row:hover {
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ticket-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 80px;
+    }
+    .ticket-letter {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 850;
+      font-size: 0.95rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    .ticket-type {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .ticket-analysis {
+      display: flex;
+      gap: 8px;
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .stat-pill {
+      background: rgba(148, 163, 184, 0.12);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .ticket-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-mini {
+      padding: 6px 10px;
+      background: transparent;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-mini:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ==========================================================================
+       Primary Action Buttons
+       ========================================================================== */
+    .action-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .btn-draw-main {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #ffffff;
+      border: none;
+      padding: 16px 42px;
+      border-radius: 999px;
+      font-size: 1.15rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 25px var(--primary-glow);
+      transition: all 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-draw-main:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 14px 30px var(--primary-glow);
+    }
+    .btn-draw-main:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .quick-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       Mode 2: 3D Animated Lotto Tumbler Drum Machine
+       ========================================================================== */
+    .tumbler-machine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 10px 0;
+    }
+
+    .tumbler-dome-wrapper {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.03) 70%, rgba(0, 0, 0, 0.25) 100%);
+      border: 4px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.25),
+        inset 0 10px 30px rgba(255, 255, 255, 0.3),
+        inset 0 -15px 30px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    :root[data-theme="dark"] .tumbler-dome-wrapper {
+      border-color: rgba(255, 255, 255, 0.12);
+      box-shadow: 
+        0 20px 45px rgba(0, 0, 0, 0.6),
+        inset 0 10px 30px rgba(255, 255, 255, 0.1),
+        inset 0 -20px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    #tumblerCanvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .tumbler-stand {
+      width: 160px;
+      height: 26px;
+      background: linear-gradient(180deg, #64748b, #334155);
+      border-radius: 8px 8px 18px 18px;
+      margin-top: -30px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .chute-results {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .chute-label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* ==========================================================================
+       Mode 3: Number Filter Grid (Include / Exclude)
+       ========================================================================== */
+    .filter-guide {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-chip {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+    }
+    .legend-normal { background: var(--card-border); border: 1px solid var(--text-subtle); }
+    .legend-fixed { background: #10b981; }
+    .legend-excluded { background: #ef4444; position: relative; }
+    .legend-excluded::after {
+      content: "✕";
+      color: #fff;
+      font-size: 11px;
+      position: absolute;
+      top: -1px; left: 3px;
+    }
+
+    .numbers-matrix {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 8px;
+      max-width: 580px;
+      margin: 0 auto 20px;
+    }
+
+    .num-cell {
+      aspect-ratio: 1;
+      border-radius: 10px;
+      background: var(--card-glass);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .num-cell:hover {
+      transform: scale(1.08);
+      border-color: var(--primary);
+    }
+    .num-cell.fixed {
+      background: #10b981 !important;
+      color: #ffffff !important;
+      border-color: #059669 !important;
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
+    }
+    .num-cell.excluded {
+      background: #ef4444 !important;
+      color: #ffffff !important;
+      border-color: #dc2626 !important;
+      text-decoration: line-through;
+      opacity: 0.75;
+    }
+
+    .filter-summary {
+      background: var(--card-glass);
+      border: 1px dashed var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      font-size: 0.86rem;
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--text-muted);
+    }
+    .filter-summary strong {
+      color: var(--text-main);
+    }
+
+    /* ==========================================================================
+       Mode 4: Saju / Fortune Generator
+       ========================================================================== */
+    .fortune-box {
+      max-width: 520px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .fortune-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      background: var(--card-glass);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+    .input-field:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .fortune-result-card {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(16, 185, 129, 0.08));
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: var(--radius-md);
+      padding: 22px;
+      margin-top: 24px;
+    }
+    .fortune-quote {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+    .fortune-detail {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    /* ==========================================================================
+       Analysis & Statistics Section
+       ========================================================================== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .stat-card {
+      background: var(--card-glass);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-card-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+    .stat-card-val {
+      font-size: 1.45rem;
+      font-weight: 850;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+    .stat-card-desc {
+      font-size: 0.72rem;
+      color: var(--text-subtle);
+    }
+
+    .color-distribution-bar {
+      display: flex;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0 6px;
+      background: rgba(0, 0, 0, 0.08);
+    }
+    .color-segment {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+
+    /* ==========================================================================
+       Modal: Official Korea Lotto Ticket Receipt View
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .ticket-paper {
+      background: #ffffff;
+      color: #1a1a1a;
+      width: 100%;
+      max-width: 380px;
+      border-radius: 14px;
+      padding: 28px 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+      position: relative;
+      font-family: 'Courier New', Courier, monospace;
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideUp {
+      from { transform: translateY(40px) scale(0.95); }
+      to { transform: translateY(0) scale(1); }
+    }
+
+    .ticket-paper::before,
+    .ticket-paper::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background-size: 14px 6px;
+      background-repeat: repeat-x;
+    }
+    .ticket-paper::before {
+      top: -3px;
+      background-image: radial-gradient(circle at 7px 0, transparent 6px, #ffffff 6px);
+    }
+    .ticket-paper::after {
+      bottom: -3px;
+      background-image: radial-gradient(circle at 7px 6px, transparent 6px, #ffffff 6px);
+    }
+
+    .ticket-brand {
+      text-align: center;
+      border-bottom: 2px dashed #94a3b8;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .ticket-brand h3 {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      color: #111;
+      margin-bottom: 2px;
+    }
+    .ticket-meta {
+      font-size: 0.72rem;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .receipt-games {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .receipt-nums {
+      display: flex;
+      gap: 8px;
+    }
+    .receipt-nums span {
+      display: inline-block;
+      width: 22px;
+      text-align: center;
+    }
+
+    .barcode-area {
+      text-align: center;
+      border-top: 2px dashed #94a3b8;
+      padding-top: 14px;
+      margin-top: 14px;
+    }
+    .fake-barcode {
+      height: 42px;
+      background: repeating-linear-gradient(90deg, #111 0px, #111 2px, #fff 2px, #fff 5px, #111 5px, #111 9px, #fff 9px, #fff 11px);
+      margin-bottom: 6px;
+    }
+    .barcode-text {
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      color: #444;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-receipt {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-print {
+      background: #10b981;
+      color: #fff;
+    }
+    .btn-close {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    /* Print styling */
+    @media print {
+      body * { visibility: hidden; }
+      .ticket-paper, .ticket-paper * { visibility: visible; }
+      .ticket-paper {
+        position: absolute;
+        left: 50%;
+        top: 50px;
+        transform: translateX(-50%);
+        box-shadow: none;
+      }
+      .modal-actions { display: none; }
+    }
+
+    /* ==========================================================================
+       Saved Drawer / History Panel
+       ========================================================================== */
+    .history-card {
+      margin-top: 24px;
+    }
+    .history-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .history-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .empty-history {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-subtle);
+      font-size: 0.9rem;
+    }
+
+    /* Canvas Confetti Layer */
+    #confettiCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Toast Notification */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      z-index: 10000;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    :root[data-theme="dark"] .toast-msg {
+      background: #ffffff;
+      color: #0f172a;
+    }
+    .toast-msg.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ==========================================================================
+       Footer
+       ========================================================================== */
+    footer {
+      text-align: center;
+      padding: 40px 0 20px;
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       Responsive Breakpoints
+       ========================================================================== */
+    @media (max-width: 640px) {
+      .app-container { padding: 12px 14px 40px; }
+      .glass-card { padding: 20px 14px; border-radius: var(--radius-md); }
+      .lotto-ball { width: 44px; height: 44px; font-size: 1.05rem; }
+      .numbers-matrix { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+      .ticket-row { flex-direction: column; align-items: stretch; gap: 8px; }
+      .ticket-head { justify-content: space-between; }
+      .btn-draw-main { width: 100%; justify-content: center; }
+      .fortune-inputs { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow lights -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <a class="brand" href="#" onclick="location.reload(); return false;">
+        <div class="brand-icon">🍀</div>
+        <div class="brand-title">
+          <span>LUCKY LOTTO 6/45</span>
+          <span class="brand-subtitle">프리미엄 로또 추첨 스튜디오</span>
+        </div>
+      </a>
+      <div class="header-ctrls">
+        <button class="icon-btn" id="soundToggle" type="button" title="사운드 켜기/끄기">
+          <span id="soundIcon">🔊</span>
+          <span id="soundText">사운드 ON</span>
+        </button>
+        <button class="icon-btn" id="themeToggle" type="button" title="테마 전환">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">다크</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="mode-nav" role="tablist">
+      <button class="tab-btn active" data-tab="quick5" type="button">⚡ 빠른 5게임</button>
+      <button class="tab-btn" data-tab="tumbler" type="button">🎰 실시간 추첨기</button>
+      <button class="tab-btn" data-tab="filter" type="button">🎯 맞춤 필터 (고정/제외)</button>
+      <button class="tab-btn" data-tab="fortune" type="button">🔮 사주 & 행운수</button>
+    </nav>
+
+    <!-- Main Dynamic Content Box -->
+    <main>
+      <!-- TAB 1: QUICK 5 GAMES -->
+      <section class="glass-card" id="tab-quick5">
+        <div class="hero-header">
+          <div class="hero-badge">✨ 대한민국 동행복권 공식 컬러 & 규격</div>
+          <h1 class="hero-title">행운의 로또 5세트 추첨</h1>
+          <p class="hero-desc">1부터 45까지 통계적 밸런스를 고려한 겹치지 않는 6개 번호 5세트(A~E)를 원클릭으로 추출합니다.</p>
+        </div>
+
+        <div class="tickets-list" id="ticketsList">
+          <!-- Dynamic 5 lines injected here -->
+        </div>
+
+        <div class="action-bar">
+          <button class="btn-draw-main" id="btnQuickDraw" type="button">
+            <span>🎲</span>
+            <span>새로운 행운 번호 5세트 뽑기</span>
+          </button>
+          <div class="quick-tools">
+            <button class="icon-btn" id="btnCopyAll" type="button">📋 전체 번호 복사</button>
+            <button class="icon-btn" id="btnOpenReceipt" type="button">🧾 실물 복권 영수증 보기</button>
+            <button class="icon-btn" id="btnSaveAll" type="button">⭐ 전체 보관함 저장</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: 3D TUMBLER LIVE MACHINE -->
+      <section class="glass-card" id="tab-tumbler" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-badge">🎰 실시간 물리 추첨 시뮬레이터</div>
+          <h2 class="hero-title">스튜디오 볼 머신 라이브 추첨</h2>
+          <p class="hero-desc">실제 방송 추첨기처럼 아크릴 돔 안에서 회전하는 공들이 차례대로 추출됩니다.</p>
+        </div>
+
+        <div class="tumbler-machine">
+          <div class="tumbler-dome-wrapper">
+            <canvas id="tumblerCanvas" width="280" height="280"></canvas>
+          </div>
+          <div class="tumbler-stand"></div>
+
+          <div class="chute-results">
+            <div class="chute-label" id="tumblerStatus">추첨 시작 버튼을 눌러주세요</div>
+            <div class="balls-container" id="tumblerResultBalls">
+              <!-- Drawn balls animate in here -->
+            </div>
+          </div>
+
+          <button class="btn-draw-main" id="btnStartTumbler" type="button">
+            <span>🎯</span>
+            <span id="tumblerBtnText">추첨 시작하기</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- TAB 3: CUSTOM FILTER (FIXED / EXCLUDED NUMBERS) -->
+      <section class="glass-card" id="tab-filter" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-badge">🎯 전략적 스마트 추첨</div>
+          <h2 class="hero-title">고정수 & 제외수 커스텀 필터</h2>
+          <p class="hero-desc">원하는 번호를 클릭하여 반드시 포함할 <strong>고정수</strong>나 제외할 <strong>제외수</strong>를 직접 설정하세요.</p>
+        </div>
+
+        <div class="filter-guide">
+          <div class="legend-item"><div class="legend-chip legend-normal"></div> 보통 (클릭 시 고정)</div>
+          <div class="legend-item"><div class="legend-chip legend-fixed"></div> 고정수 (초록, 최대 5개)</div>
+          <div class="legend-item"><div class="legend-chip legend-excluded"></div> 제외수 (빨강)</div>
+        </div>
+
+        <div class="numbers-matrix" id="filterMatrix">
+          <!-- 1 to 45 buttons -->
+        </div>
+
+        <div class="filter-summary" id="filterSummary">
+          설정 현황: 고정수 <strong>0개</strong> / 제외수 <strong>0개</strong> (랜덤 생성: 6개)
+        </div>
+
+        <div class="action-bar">
+          <div style="display:flex; gap: 8px;">
+            <button class="icon-btn" id="btnResetFilter" type="button">🔄 필터 초기화</button>
+            <button class="btn-draw-main" id="btnDrawFiltered" type="button">
+              <span>⚡</span> 필터 적용하여 5게임 생성
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: FORTUNE & SAJU GENERATOR -->
+      <section class="glass-card" id="tab-fortune" style="display: none;">
+        <div class="hero-header">
+          <div class="hero-badge">🔮 오늘의 운세 연동</div>
+          <h2 class="hero-title">사주 & 행운의 에너지 번호</h2>
+          <p class="hero-desc">생년월일과 이름을 기반으로 오늘 당신의 수비학적 기운과 맞는 6개 행운 번호를 계산합니다.</p>
+        </div>
+
+        <div class="fortune-box">
+          <div class="fortune-inputs">
+            <div class="input-group">
+              <label for="fortuneName">이름 (또는 닉네임)</label>
+              <input type="text" id="fortuneName" class="input-field" placeholder="예: 홍길동" value="행운이">
+            </div>
+            <div class="input-group">
+              <label for="fortuneBirth">생년월일 (8자리)</label>
+              <input type="date" id="fortuneBirth" class="input-field" value="1995-07-07">
+            </div>
+          </div>
+
+          <button class="btn-draw-main" id="btnGenerateFortune" type="button">
+            <span>✨</span> 나의 행운 번호 확인하기
+          </button>
+
+          <div class="fortune-result-card" id="fortuneCard" style="display: none;">
+            <div class="fortune-quote" id="fortuneQuote">"금전운과 귀인의 기운이 최고조에 달한 날입니다!"</div>
+            <div class="fortune-detail" id="fortuneDetail">오늘의 수비학 분석에 따라 길(吉)한 파동을 지닌 조합입니다.</div>
+            <div class="balls-container" id="fortuneBalls"></div>
+            <div style="margin-top: 16px;">
+              <button class="icon-btn" id="btnSaveFortune" type="button">⭐ 이 행운 번호 저장</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STATISTICS & ANALYSIS COMPONENT -->
+      <section class="glass-card">
+        <div class="hero-header" style="margin-bottom: 16px;">
+          <h3 style="font-size: 1.15rem; font-weight: 800;">📊 최근 추천 조합 밸런스 통계</h3>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-card-title">홀짝 비율 (Odd : Even)</div>
+            <div class="stat-card-val" id="statOddEven">3 : 3</div>
+            <div class="stat-card-desc">가장 당첨 확률이 높은 황금 비율 (2:4 ~ 4:2)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">번호 총합계 (Sum)</div>
+            <div class="stat-card-val" id="statSum">138</div>
+            <div class="stat-card-desc">역대 1등 다빈도 구간: 100 ~ 175</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">고저 비율 (1~22 vs 23~45)</div>
+            <div class="stat-card-val" id="statHighLow">3 : 3</div>
+            <div class="stat-card-desc">전체 번호 대역의 고른 분산 여부</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-title">색상 분포 (Colors)</div>
+            <div class="color-distribution-bar" id="colorDistBar">
+              <div class="color-segment" style="width:20%; background:#fbc400;"></div>
+              <div class="color-segment" style="width:20%; background:#2b88e6;"></div>
+              <div class="color-segment" style="width:20%; background:#ff4b4b;"></div>
+              <div class="color-segment" style="width:20%; background:#8a9aa7;"></div>
+              <div class="color-segment" style="width:20%; background:#20bf6b;"></div>
+            </div>
+            <div class="stat-card-desc" id="colorDistText">노랑 1 · 파랑 2 · 빨강 1 · 회색 1 · 녹색 1</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SAVED NUMBERS VAULT -->
+      <section class="glass-card history-card">
+        <div class="history-head">
+          <div class="history-title">
+            <span>⭐</span>
+            <span>나의 행운 번호 보관함</span>
+            <span class="hero-badge" id="savedCountBadge" style="margin: 0; padding: 2px 8px; font-size: 0.72rem;">0개</span>
+          </div>
+          <button class="icon-btn" id="btnClearHistory" type="button" style="padding: 4px 10px; font-size: 0.76rem;">전체 비우기</button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-history">아직 보관된 번호가 없습니다. 마음에 드는 조합의 '저장' 버튼을 눌러보세요!</div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+      <p><strong>LUCKY LOTTO 6/45</strong> · 대한민국 동행복권 규격 기반 행운 번호 추출기</p>
+      <p>본 사이트의 추천 번호는 알고리즘에 기반한 무작위 추출이며 당첨을 보장하지 않습니다. 즐거운 마음으로 소액으로 건전하게 참여하세요.</p>
+    </footer>
+  </div>
+
+  <!-- MODAL: REALISTIC LOTTO PAPER RECEIPT -->
+  <div class="modal-overlay" id="receiptModal">
+    <div class="ticket-paper">
+      <div class="ticket-brand">
+        <h3>로또 6/45</h3>
+        <div class="ticket-meta">
+          <div>발행일: <span id="receiptDate">2026/10/24 (토)</span></div>
+          <div>추첨일: 매주 토요일 오후 8시 35분경</div>
+          <div>제 <strong>1152</strong> 회차 (가상 티켓)</div>
+        </div>
+      </div>
+
+      <div class="receipt-games" id="receiptGames">
+        <!-- Rows injected dynamically -->
+      </div>
+
+      <div class="barcode-area">
+        <div class="fake-barcode"></div>
+        <div class="barcode-text">59381 29482 10928 44921 94021</div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-receipt btn-print" id="btnPrintReceipt" type="button">🖨️ 영수증 인쇄</button>
+        <button class="btn-receipt btn-close" id="btnCloseReceipt" type="button">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification element -->
+  <div class="toast-msg" id="toastMsg">클립보드에 복사되었습니다!</div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT APPLICATION LOGIC
+       ========================================================================== -->
+  <script>
+    /* --------------------------------------------------------------------------
+       1. Audio Synthesizer (Pure Web Audio API - Zero External Dependencies)
+       -------------------------------------------------------------------------- */
+    let audioCtx = null;
+    let isSoundMuted = localStorage.getItem('soundMuted') === 'true';
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playTone(freq, type, duration, gainVal = 0.15) {
+      if (isSoundMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Melodic sounds
+    function soundPop() {
+      playTone(520 + Math.random() * 200, 'sine', 0.1, 0.18);
+      if (navigator.vibrate) navigator.vibrate(10);
+    }
+
+    function soundBallDrop(step = 1) {
+      const scale = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 1046.50];
+      const freq = scale[step % scale.length];
+      playTone(freq, 'triangle', 0.28, 0.25);
+      if (navigator.vibrate) navigator.vibrate(25);
+    }
+
+    function soundFanfare() {
+      if (isSoundMuted) return;
+      initAudio();
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((f, idx) => {
+        setTimeout(() => playTone(f, 'sine', 0.4, 0.2), idx * 100);
+      });
+      if (navigator.vibrate) navigator.vibrate([40, 60, 40, 80, 120]);
+    }
+
+    /* --------------------------------------------------------------------------
+       2. Canvas Confetti System (Pure JS / High Performance)
+       -------------------------------------------------------------------------- */
+    const confettiCanvas = document.getElementById('confettiCanvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimationId = null;
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeConfettiCanvas);
+    resizeConfettiCanvas();
+
+    function triggerConfetti() {
+      confettiParticles = [];
+      const colors = ['#fbc400', '#2b88e6', '#ff4b4b', '#20bf6b', '#8a9aa7', '#a855f7', '#ec4899'];
+      const total = 90;
+
+      for (let i = 0; i < total; i++) {
+        confettiParticles.push({
+          x: confettiCanvas.width / 2 + (Math.random() - 0.5) * 200,
+          y: confettiCanvas.height / 2 - 50,
+          vx: (Math.random() - 0.5) * 18,
+          vy: (Math.random() - 0.9) * 16 - 4,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 12,
+          opacity: 1,
+          decay: Math.random() * 0.015 + 0.008
+        });
+      }
+
+      if (!confettiAnimationId) {
+        animateConfetti();
+      }
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.35; // gravity
+        p.vx *= 0.98; // air resistance
+        p.rotation += p.vRot;
+        p.opacity -= p.decay;
+
+        if (p.opacity <= 0 || p.y > confettiCanvas.height) {
+          confettiParticles.splice(i, 1);
+          continue;
+        }
+
+        confettiCtx.save();
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rotation * Math.PI) / 180);
+        confettiCtx.globalAlpha = Math.max(0, p.opacity);
+        confettiCtx.fillStyle = p.color;
+        confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.7);
+        confettiCtx.restore();
+      }
+
+      if (confettiParticles.length > 0) {
+        confettiAnimationId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimationId = null;
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       3. Lotto Ball Helper & Korean Color Classification
+       -------------------------------------------------------------------------- */
+    function getBallRange(num) {
+      if (num <= 10) return 'yellow';
+      if (num <= 20) return 'blue';
+      if (num <= 30) return 'red';
+      if (num <= 40) return 'gray';
+      return 'green';
+    }
+
+    function createBallElement(num, delay = 0, isBonus = false) {
+      const ball = document.createElement('div');
+      ball.className = `lotto-ball ${isBonus ? 'bonus-ball' : ''}`;
+      ball.dataset.range = getBallRange(num);
+      ball.textContent = num;
+      if (delay > 0) {
+        ball.style.animationDelay = `${delay}ms`;
+      }
+      if (isBonus) {
+        const tag = document.createElement('span');
+        tag.className = 'bonus-tag';
+        tag.textContent = '보너스';
+        ball.appendChild(tag);
+      }
+      return ball;
+    }
+
+    /* --------------------------------------------------------------------------
+       4. State & Global Variables
+       -------------------------------------------------------------------------- */
+    let currentTickets = []; // 5 games: Array of [num, num, num, num, num, num]
+    let savedNumbers = JSON.parse(localStorage.getItem('savedLottoNumbers') || '[]');
+
+    // Filter mode state
+    const fixedNumbers = new Set();
+    const excludedNumbers = new Set();
+
+    /* --------------------------------------------------------------------------
+       5. Core Generator Algorithm
+       -------------------------------------------------------------------------- */
+    function generateSingleGame(fixed = [], excluded = []) {
+      const fixedSet = new Set(fixed);
+      const excludedSet = new Set(excluded);
+      
+      const available = [];
+      for (let i = 1; i <= 45; i++) {
+        if (!fixedSet.has(i) && !excludedSet.has(i)) {
+          available.push(i);
+        }
+      }
+
+      // Fisher-Yates Shuffle
+      for (let i = available.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [available[i], available[j]] = [available[j], available[i]];
+      }
+
+      const needed = 6 - fixed.length;
+      if (available.length < needed) {
+        throw new Error('선택 가능한 번호가 부족합니다. 제외수를 줄여주세요.');
+      }
+
+      const selected = [...fixed, ...available.slice(0, needed)];
+      return selected.sort((a, b) => a - b);
+    }
+
+    function generateFiveGames(fixed = [], excluded = []) {
+      const games = [];
+      for (let i = 0; i < 5; i++) {
+        games.push(generateSingleGame(fixed, excluded));
+      }
+      return games;
+    }
+
+    /* --------------------------------------------------------------------------
+       6. Render 5 Quick Tickets & Calculate Stats
+       -------------------------------------------------------------------------- */
+    const ticketsList = document.getElementById('ticketsList');
+
+    function renderTickets(games) {
+      currentTickets = games;
+      ticketsList.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+
+      games.forEach((game, idx) => {
+        const row = document.createElement('div');
+        row.className = 'ticket-row';
+
+        // Head
+        const head = document.createElement('div');
+        head.className = 'ticket-head';
+        head.innerHTML = `
+          <div class="ticket-letter">${letters[idx]}</div>
+          <div>
+            <div style="font-weight:700; font-size:0.86rem;">게임 ${letters[idx]}</div>
+            <div class="ticket-type">자동 추천</div>
+          </div>
+        `;
+
+        // Balls
+        const ballsWrap = document.createElement('div');
+        ballsWrap.className = 'balls-container';
+        game.forEach((num, bIdx) => {
+          ballsWrap.appendChild(createBallElement(num, (idx * 6 + bIdx) * 35));
+        });
+
+        // Analysis Pills
+        const oddCount = game.filter(n => n % 2 !== 0).length;
+        const sum = game.reduce((acc, c) => acc + c, 0);
+        const highCount = game.filter(n => n >= 23).length;
+
+        const analysis = document.createElement('div');
+        analysis.className = 'ticket-analysis';
+        analysis.innerHTML = `
+          <span class="stat-pill">홀:짝 ${oddCount}:${6 - oddCount}</span>
+          <span class="stat-pill">합계 ${sum}</span>
+          <span class="stat-pill">고:저 ${highCount}:${6 - highCount}</span>
+        `;
+
+        // Actions
+        const actions = document.createElement('div');
+        actions.className = 'ticket-actions';
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'btn-mini';
+        btnCopy.innerHTML = '📋 복사';
+        btnCopy.title = '이 게임 번호 복사';
+        btnCopy.addEventListener('click', () => {
+          copyToClipboard(`[로또 6/45 ${letters[idx]}게임] ${game.join(', ')}`);
+        });
+
+        const btnSave = document.createElement('button');
+        btnSave.className = 'btn-mini';
+        btnSave.innerHTML = '⭐ 저장';
+        btnSave.title = '보관함에 저장';
+        btnSave.addEventListener('click', () => {
+          saveGameToVault(game, `${letters[idx]}게임`);
+        });
+
+        actions.appendChild(btnCopy);
+        actions.appendChild(btnSave);
+
+        row.appendChild(head);
+        row.appendChild(ballsWrap);
+        row.appendChild(analysis);
+        row.appendChild(actions);
+
+        ticketsList.appendChild(row);
+      });
+
+      updateStatistics(games);
+    }
+
+    function updateStatistics(games) {
+      if (!games || games.length === 0) return;
+      // Use game A as representative or average
+      const gameA = games[0];
+      const oddCount = gameA.filter(n => n % 2 !== 0).length;
+      const sum = gameA.reduce((a, b) => a + b, 0);
+      const highCount = gameA.filter(n => n >= 23).length;
+
+      document.getElementById('statOddEven').textContent = `${oddCount} : ${6 - oddCount}`;
+      document.getElementById('statSum').textContent = `${sum}`;
+      document.getElementById('statHighLow').textContent = `${highCount} : ${6 - highCount}`;
+
+      // Colors across all 5 games (30 balls)
+      const allBalls = games.flat();
+      const colCounts = { yellow: 0, blue: 0, red: 0, gray: 0, green: 0 };
+      allBalls.forEach(n => {
+        colCounts[getBallRange(n)]++;
+      });
+      const total = allBalls.length;
+
+      const bar = document.getElementById('colorDistBar');
+      bar.innerHTML = `
+        <div class="color-segment" style="width:${(colCounts.yellow/total)*100}%; background:#fbc400;" title="1~10 노랑: ${colCounts.yellow}개"></div>
+        <div class="color-segment" style="width:${(colCounts.blue/total)*100}%; background:#2b88e6;" title="11~20 파랑: ${colCounts.blue}개"></div>
+        <div class="color-segment" style="width:${(colCounts.red/total)*100}%; background:#ff4b4b;" title="21~30 빨강: ${colCounts.red}개"></div>
+        <div class="color-segment" style="width:${(colCounts.gray/total)*100}%; background:#8a9aa7;" title="31~40 회색: ${colCounts.gray}개"></div>
+        <div class="color-segment" style="width:${(colCounts.green/total)*100}%; background:#20bf6b;" title="41~45 녹색: ${colCounts.green}개"></div>
+      `;
+
+      document.getElementById('colorDistText').textContent = 
+        `노랑 ${colCounts.yellow} · 파랑 ${colCounts.blue} · 빨강 ${colCounts.red} · 회색 ${colCounts.gray} · 녹색 ${colCounts.green}`;
+    }
+
+    /* --------------------------------------------------------------------------
+       7. Tab 2: 3D Animated Tumbler Ball Machine (Canvas Physics Simulation)
+       -------------------------------------------------------------------------- */
+    const tumblerCanvas = document.getElementById('tumblerCanvas');
+    const tCtx = tumblerCanvas.getContext('2d');
+    const tumblerResultBalls = document.getElementById('tumblerResultBalls');
+    const btnStartTumbler = document.getElementById('btnStartTumbler');
+    const tumblerStatus = document.getElementById('tumblerStatus');
+
+    let tumblerBalls = [];
+    let isTumblerSpinning = false;
+    let tumblerDrawInterval = null;
+
+    function initTumblerBalls() {
+      tumblerBalls = [];
+      const numColors = {
+        yellow: '#fbc400',
+        blue: '#2b88e6',
+        red: '#ff4b4b',
+        gray: '#8a9aa7',
+        green: '#20bf6b'
+      };
+
+      for (let i = 1; i <= 45; i++) {
+        const range = getBallRange(i);
+        tumblerBalls.push({
+          num: i,
+          x: 140 + (Math.random() - 0.5) * 100,
+          y: 140 + (Math.random() - 0.5) * 100,
+          vx: (Math.random() - 0.5) * 3,
+          vy: (Math.random() - 0.5) * 3,
+          r: 12,
+          color: numColors[range]
+        });
+      }
+    }
+
+    function renderTumbler() {
+      tCtx.clearRect(0, 0, 280, 280);
+
+      const centerX = 140;
+      const centerY = 140;
+      const radius = 125;
+
+      // Draw subtle circular guide
+      tCtx.beginPath();
+      tCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      tCtx.fillStyle = 'rgba(0, 0, 0, 0.04)';
+      tCtx.fill();
+
+      // Update & Draw balls
+      tumblerBalls.forEach(b => {
+        if (isTumblerSpinning) {
+          // Add centrifugal turbulent agitation force
+          const angle = Math.atan2(b.y - centerY, b.x - centerX);
+          b.vx += Math.cos(angle + Math.PI / 2) * 2.2 + (Math.random() - 0.5) * 3;
+          b.vy += Math.sin(angle + Math.PI / 2) * 2.2 + (Math.random() - 0.5) * 3;
+        }
+
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // Friction
+        b.vx *= 0.96;
+        b.vy *= 0.96;
+
+        // Keep inside circle
+        const dist = Math.hypot(b.x - centerX, b.y - centerY);
+        if (dist + b.r > radius) {
+          const normalX = (b.x - centerX) / dist;
+          const normalY = (b.y - centerY) / dist;
+          
+          b.x = centerX + normalX * (radius - b.r);
+          b.y = centerY + normalY * (radius - b.r);
+
+          // Reflect velocity
+          const dot = b.vx * normalX + b.vy * normalY;
+          b.vx = (b.vx - 2 * dot * normalX) * 0.8;
+          b.vy = (b.vy - 2 * dot * normalY) * 0.8;
+        }
+
+        // Draw Ball
+        tCtx.save();
+        tCtx.beginPath();
+        tCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        const grad = tCtx.createRadialGradient(b.x - 3, b.y - 3, 2, b.x, b.y, b.r);
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.4, b.color);
+        grad.addColorStop(1, '#111827');
+        tCtx.fillStyle = grad;
+        tCtx.fill();
+        tCtx.restore();
+      });
+
+      requestAnimationFrame(renderTumbler);
+    }
+
+    function startTumblerSimulation() {
+      if (isTumblerSpinning) return;
+      initAudio();
+      isTumblerSpinning = true;
+      btnStartTumbler.disabled = true;
+      document.getElementById('tumblerBtnText').textContent = '추첨 진행 중...';
+      tumblerResultBalls.innerHTML = '';
+      tumblerStatus.textContent = '공들이 힘차게 회전하고 있습니다... 🌀';
+
+      // Pick 6 winning numbers + 1 bonus number
+      const pool = Array.from({ length: 45 }, (_, i) => i + 1);
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      const winningNums = pool.slice(0, 6).sort((a, b) => a - b);
+      const bonusNum = pool[6];
+
+      let step = 0;
+      tumblerDrawInterval = setInterval(() => {
+        if (step < 6) {
+          const num = winningNums[step];
+          const ballEl = createBallElement(num, 0);
+          tumblerResultBalls.appendChild(ballEl);
+          soundBallDrop(step);
+          tumblerStatus.textContent = `${step + 1}번째 행운 번호: ${num}번 추첨!`;
+          step++;
+        } else if (step === 6) {
+          // Add plus sign and bonus ball
+          const plus = document.createElement('span');
+          plus.className = 'plus-sign';
+          plus.textContent = '+';
+          tumblerResultBalls.appendChild(plus);
+
+          const bonusBallEl = createBallElement(bonusNum, 0, true);
+          tumblerResultBalls.appendChild(bonusBallEl);
+          soundBallDrop(7);
+          tumblerStatus.textContent = `보너스 번호: ${bonusNum}번 완료! 🎉`;
+          step++;
+        } else {
+          clearInterval(tumblerDrawInterval);
+          isTumblerSpinning = false;
+          btnStartTumbler.disabled = false;
+          document.getElementById('tumblerBtnText').textContent = '다시 추첨하기';
+          tumblerStatus.textContent = `✨ 추첨 완료! 행운을 진심으로 기원합니다! ✨`;
+          soundFanfare();
+          triggerConfetti();
+
+          // Offer to save this generated single game
+          saveGameToVault(winningNums, '라이브 추첨');
+        }
+      }, 750);
+    }
+
+    btnStartTumbler.addEventListener('click', startTumblerSimulation);
+
+    /* --------------------------------------------------------------------------
+       8. Tab 3: Custom Filter Grid (Fixed & Excluded)
+       -------------------------------------------------------------------------- */
+    const filterMatrix = document.getElementById('filterMatrix');
+    const filterSummary = document.getElementById('filterSummary');
+    const btnResetFilter = document.getElementById('btnResetFilter');
+    const btnDrawFiltered = document.getElementById('btnDrawFiltered');
+
+    function initFilterMatrix() {
+      filterMatrix.innerHTML = '';
+      for (let i = 1; i <= 45; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'num-cell';
+        cell.textContent = i;
+        cell.dataset.num = i;
+
+        cell.addEventListener('click', () => {
+          soundPop();
+          toggleFilterCell(i, cell);
+        });
+
+        filterMatrix.appendChild(cell);
+      }
+      updateFilterSummary();
+    }
+
+    function toggleFilterCell(num, el) {
+      if (!fixedNumbers.has(num) && !excludedNumbers.has(num)) {
+        // Normal -> Fixed (Max 5)
+        if (fixedNumbers.size >= 5) {
+          showToast('고정수는 최대 5개까지만 선택 가능합니다.');
+          return;
+        }
+        fixedNumbers.add(num);
+        el.classList.add('fixed');
+      } else if (fixedNumbers.has(num)) {
+        // Fixed -> Excluded
+        fixedNumbers.delete(num);
+        el.classList.remove('fixed');
+        excludedNumbers.add(num);
+        el.classList.add('excluded');
+      } else {
+        // Excluded -> Normal
+        excludedNumbers.delete(num);
+        el.classList.remove('excluded');
+      }
+      updateFilterSummary();
+    }
+
+    function updateFilterSummary() {
+      const fixedCount = fixedNumbers.size;
+      const excludedCount = excludedNumbers.size;
+      const neededRandom = 6 - fixedCount;
+      const availableRemaining = 45 - fixedCount - excludedCount;
+
+      filterSummary.innerHTML = `
+        설정 현황: 고정수 <strong>${fixedCount}개</strong> ([${Array.from(fixedNumbers).sort((a,b)=>a-b).join(', ') || '없음'}]) / 
+        제외수 <strong>${excludedCount}개</strong> | 
+        선택 가능 잔여: <strong>${availableRemaining}개</strong> (자동 추첨: ${neededRandom}개)
+      `;
+    }
+
+    btnResetFilter.addEventListener('click', () => {
+      fixedNumbers.clear();
+      excludedNumbers.clear();
+      document.querySelectorAll('.num-cell').forEach(c => {
+        c.classList.remove('fixed', 'excluded');
+      });
+      updateFilterSummary();
+      soundPop();
+      showToast('필터가 초기화되었습니다.');
+    });
+
+    btnDrawFiltered.addEventListener('click', () => {
+      try {
+        const games = generateFiveGames(Array.from(fixedNumbers), Array.from(excludedNumbers));
+        // Switch to quick5 tab to show results
+        switchTab('quick5');
+        renderTickets(games);
+        soundFanfare();
+        triggerConfetti();
+        showToast('맞춤 필터가 적용된 5게임이 생성되었습니다!');
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       9. Tab 4: Fortune & Saju Generator
+       -------------------------------------------------------------------------- */
+    const btnGenerateFortune = document.getElementById('btnGenerateFortune');
+    const fortuneCard = document.getElementById('fortuneCard');
+    const fortuneQuote = document.getElementById('fortuneQuote');
+    const fortuneDetail = document.getElementById('fortuneDetail');
+    const fortuneBalls = document.getElementById('fortuneBalls');
+    const btnSaveFortune = document.getElementById('btnSaveFortune');
+    let lastFortuneNums = [];
+
+    const fortuneQuotes = [
+      { quote: '"동쪽에서 큰 재물운의 기운이 솟아나는 날입니다."', detail: '천간과 지지의 조화가 완벽하여 선택한 번호들에 강력한 운기가 깃들어 있습니다.' },
+      { quote: '"뜻밖의 행운이 찾아와 기쁨을 전해줄 운세입니다."', detail: '오행 중 금(金)과 수(水)의 기운이 활발히 작용하여 뜻하지 않은 결실을 기대할 수 있습니다.' },
+      { quote: '"정성과 기대가 합쳐져 커다란 행운을 부릅니다."', detail: '마음을 편안히 먹고 긍정적인 파동을 유지할 때 황금빛 당첨운이 더욱 배가됩니다.' },
+      { quote: '"오랜 기다림 끝에 찾아온 찬란한 기회의 날!"', detail: '당신의 사주와 오늘의 일진이 매우 상생하여 특별한 길운의 숫자들이 도출되었습니다.' }
+    ];
+
+    btnGenerateFortune.addEventListener('click', () => {
+      const name = document.getElementById('fortuneName').value.trim() || '행운이';
+      const birth = document.getElementById('fortuneBirth').value || '1995-07-07';
+      
+      // Pseudo-random deterministic hash based on Name + Birth + Today's date
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const seedStr = `${name}-${birth}-${todayStr}`;
+      let hash = 0;
+      for (let i = 0; i < seedStr.length; i++) {
+        hash = (hash << 5) - hash + seedStr.charCodeAt(i);
+        hash |= 0;
+      }
+      hash = Math.abs(hash);
+
+      // Generate 6 distinct numbers based on seed
+      const nums = [];
+      let step = 1;
+      while (nums.length < 6) {
+        const val = ((hash * step + step * 13) % 45) + 1;
+        if (!nums.includes(val)) {
+          nums.push(val);
+        }
+        step++;
+      }
+      nums.sort((a, b) => a - b);
+      lastFortuneNums = nums;
+
+      const randomQuote = fortuneQuotes[hash % fortuneQuotes.length];
+      fortuneQuote.textContent = randomQuote.quote;
+      fortuneDetail.textContent = `${name}님의 오늘 운세: ${randomQuote.detail}`;
+
+      fortuneBalls.innerHTML = '';
+      nums.forEach((num, idx) => {
+        fortuneBalls.appendChild(createBallElement(num, idx * 60));
+      });
+
+      fortuneCard.style.display = 'block';
+      soundFanfare();
+      triggerConfetti();
+    });
+
+    btnSaveFortune.addEventListener('click', () => {
+      if (lastFortuneNums.length === 6) {
+        saveGameToVault(lastFortuneNums, '사주 행운수');
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       10. Modal: Realistic Korean Lotto Receipt View & Print
+       -------------------------------------------------------------------------- */
+    const receiptModal = document.getElementById('receiptModal');
+    const btnOpenReceipt = document.getElementById('btnOpenReceipt');
+    const btnCloseReceipt = document.getElementById('btnCloseReceipt');
+    const btnPrintReceipt = document.getElementById('btnPrintReceipt');
+    const receiptGames = document.getElementById('receiptGames');
+
+    function openReceiptView() {
+      if (!currentTickets || currentTickets.length === 0) {
+        showToast('먼저 번호를 생성해주세요.');
+        return;
+      }
+
+      const now = new Date();
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      document.getElementById('receiptDate').textContent = 
+        `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} (${days[now.getDay()]})`;
+
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      receiptGames.innerHTML = '';
+
+      currentTickets.forEach((game, idx) => {
+        const row = document.createElement('div');
+        row.className = 'receipt-row';
+        row.innerHTML = `
+          <span>${letters[idx]} 자동</span>
+          <div class="receipt-nums">
+            ${game.map(n => `<span>${String(n).padStart(2, '0')}</span>`).join('')}
+          </div>
+        `;
+        receiptGames.appendChild(row);
+      });
+
+      receiptModal.classList.add('open');
+      soundPop();
+    }
+
+    btnOpenReceipt.addEventListener('click', openReceiptView);
+    btnCloseReceipt.addEventListener('click', () => {
+      receiptModal.classList.remove('open');
+      soundPop();
+    });
+    btnPrintReceipt.addEventListener('click', () => {
+      window.print();
+    });
+
+    receiptModal.addEventListener('click', (e) => {
+      if (e.target === receiptModal) {
+        receiptModal.classList.remove('open');
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       11. Saved Vault / Storage Logic
+       -------------------------------------------------------------------------- */
+    const historyList = document.getElementById('historyList');
+    const savedCountBadge = document.getElementById('savedCountBadge');
+    const btnClearHistory = document.getElementById('btnClearHistory');
+    const btnSaveAll = document.getElementById('btnSaveAll');
+
+    function saveGameToVault(nums, tag = '추천') {
+      const item = {
+        id: Date.now() + Math.random(),
+        date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        numbers: nums,
+        tag: tag
+      };
+      savedNumbers.unshift(item);
+      if (savedNumbers.length > 50) savedNumbers.pop(); // Max 50
+      localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
+      renderVaultList();
+      showToast('보관함에 저장되었습니다!');
+      soundPop();
+    }
+
+    btnSaveAll.addEventListener('click', () => {
+      if (!currentTickets || currentTickets.length === 0) return;
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      currentTickets.forEach((game, i) => {
+        savedNumbers.unshift({
+          id: Date.now() + i,
+          date: new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+          numbers: game,
+          tag: `${letters[i]}세트`
+        });
+      });
+      if (savedNumbers.length > 50) savedNumbers = savedNumbers.slice(0, 50);
+      localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
+      renderVaultList();
+      showToast('5세트 모두 보관함에 저장되었습니다!');
+      soundFanfare();
+    });
+
+    function deleteFromVault(id) {
+      savedNumbers = savedNumbers.filter(item => item.id !== id);
+      localStorage.setItem('savedLottoNumbers', JSON.stringify(savedNumbers));
+      renderVaultList();
+      showToast('삭제되었습니다.');
+    }
+
+    btnClearHistory.addEventListener('click', () => {
+      if (savedNumbers.length === 0) return;
+      if (confirm('보관함의 모든 번호를 삭제하시겠습니까?')) {
+        savedNumbers = [];
+        localStorage.removeItem('savedLottoNumbers');
+        renderVaultList();
+        showToast('보관함이 비워졌습니다.');
+      }
+    });
+
+    function renderVaultList() {
+      savedCountBadge.textContent = `${savedNumbers.length}개`;
+      if (savedNumbers.length === 0) {
+        historyList.innerHTML = `<div class="empty-history">아직 보관된 번호가 없습니다. 마음에 드는 조합의 '저장' 버튼을 눌러보세요!</div>`;
+        return;
+      }
+
+      historyList.innerHTML = '';
+      savedNumbers.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'ticket-row';
+        row.style.padding = '10px 14px';
+
+        const head = document.createElement('div');
+        head.className = 'ticket-head';
+        head.innerHTML = `
+          <div>
+            <div style="font-weight:700; font-size:0.84rem;">${item.tag}</div>
+            <div style="font-size:0.7rem; color:var(--text-subtle);">${item.date}</div>
+          </div>
+        `;
+
+        const ballsWrap = document.createElement('div');
+        ballsWrap.className = 'balls-container';
+        item.numbers.forEach(num => {
+          const b = createBallElement(num);
+          b.style.width = '36px';
+          b.style.height = '36px';
+          b.style.fontSize = '0.9rem';
+          ballsWrap.appendChild(b);
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'ticket-actions';
+
+        const btnCopy = document.createElement('button');
+        btnCopy.className = 'btn-mini';
+        btnCopy.textContent = '복사';
+        btnCopy.addEventListener('click', () => {
+          copyToClipboard(item.numbers.join(', '));
+        });
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-mini';
+        btnDel.textContent = '삭제';
+        btnDel.addEventListener('click', () => {
+          deleteFromVault(item.id);
+        });
+
+        actions.appendChild(btnCopy);
+        actions.appendChild(btnDel);
+
+        row.appendChild(head);
+        row.appendChild(ballsWrap);
+        row.appendChild(actions);
+
+        historyList.appendChild(row);
+      });
+    }
+
+    /* --------------------------------------------------------------------------
+       12. Clipboard & Toast Utility
+       -------------------------------------------------------------------------- */
+    const toastMsg = document.getElementById('toastMsg');
+    let toastTimeout = null;
+
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toastMsg.classList.add('show');
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastMsg.classList.remove('show');
+      }, 2500);
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('클립보드에 복사되었습니다! 📋');
+          soundPop();
+        }).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('클립보드에 복사되었습니다! 📋');
+      soundPop();
+    }
+
+    document.getElementById('btnCopyAll').addEventListener('click', () => {
+      if (!currentTickets || currentTickets.length === 0) return;
+      const letters = ['A', 'B', 'C', 'D', 'E'];
+      let shareText = `🍀 [로또 6/45 행운 추천 번호]\n`;
+      currentTickets.forEach((game, i) => {
+        shareText += `[${letters[i]}] ${game.map(n => String(n).padStart(2, '0')).join(', ')}\n`;
+      });
+      shareText += `\n오늘의 1등 주인공은 바로 당신! ✨`;
+      copyToClipboard(shareText);
+    });
+
+    /* --------------------------------------------------------------------------
+       13. Tab Navigation Controller
+       -------------------------------------------------------------------------- */
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabSections = {
+      quick5: document.getElementById('tab-quick5'),
+      tumbler: document.getElementById('tab-tumbler'),
+      filter: document.getElementById('tab-filter'),
+      fortune: document.getElementById('tab-fortune')
+    };
+
+    function switchTab(targetTab) {
+      tabButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === targetTab);
+      });
+
+      Object.entries(tabSections).forEach(([key, section]) => {
+        section.style.display = key === targetTab ? 'block' : 'none';
+      });
+
+      soundPop();
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab(btn.dataset.tab);
+      });
+    });
+
+    /* --------------------------------------------------------------------------
+       14. Theme & Sound Header Controls
+       -------------------------------------------------------------------------- */
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const isDark = theme === 'dark';
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+      themeText.textContent = isDark ? '화이트' : '다크';
+      localStorage.setItem('theme', theme);
+    }
+
+    const savedTheme = localStorage.getItem('theme') || 
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+      soundPop();
+    });
+
+    // Sound toggle
+    const soundToggle = document.getElementById('soundToggle');
+    const soundIcon = document.getElementById('soundIcon');
+    const soundText = document.getElementById('soundText');
+
+    function updateSoundUI() {
+      soundIcon.textContent = isSoundMuted ? '🔇' : '🔊';
+      soundText.textContent = isSoundMuted ? '음소거' : '사운드 ON';
+    }
+    updateSoundUI();
+
+    soundToggle.addEventListener('click', () => {
+      isSoundMuted = !isSoundMuted;
+      localStorage.setItem('soundMuted', String(isSoundMuted));
+      updateSoundUI();
+      if (!isSoundMuted) soundPop();
+    });
+
+    /* --------------------------------------------------------------------------
+       15. Initialization
+       -------------------------------------------------------------------------- */
+    document.getElementById('btnQuickDraw').addEventListener('click', () => {
+      const games = generateFiveGames();
+      renderTickets(games);
+      soundFanfare();
+      triggerConfetti();
+    });
+
+    // Boot
+    initFilterMatrix();
+    initTumblerBalls();
+    renderTumbler();
+    renderVaultList();
+
+    // Initial draw
+    const initialGames = generateFiveGames();
+    renderTickets(initialGames);
+  </script>
+</body>
+</html>
